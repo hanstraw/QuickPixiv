@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QPushButton, QTextEdit, QProgressBar, QSpinBox,
                              QComboBox, QFileDialog, QGroupBox, QMessageBox)
 from PyQt6.QtCore import QThread, pyqtSignal, Qt, QSettings
-from PyQt6.QtGui import QFont, QTextCursor
+from PyQt6.QtGui import QFont, QTextCursor, QIcon
 from token_helper import verify_token
 from pixiv_downloader import PixivDownloader
 
@@ -76,6 +76,7 @@ class PixivDownloaderGUI(QMainWindow):
         self.load_settings()
     
     def init_ui(self):
+        self.setWindowIcon(QIcon(str(Path("1.ico").absolute())))
         self.setWindowTitle("Pixiv自动下载器")
         self.setGeometry(100, 100, 800, 600)
         

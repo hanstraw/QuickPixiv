@@ -127,24 +127,29 @@ class PixivDownloader:
             return False
     
     def download_recommended(self, progress_callback=None):
-        """下载推荐作品"""
+        """下载推荐作品（支持自动翻页）"""
         if not self.login():
             return
         
         self.log(f"开始下载推荐作品 (数量: {self.recommended_limit})")
         try:
-            result = self.api.illust_recommended()
-            illusts = result['illusts']
+            offset = 0
             count = 0
-            for i, illust in enumerate(illusts):
-                if count >= self.recommended_limit:
+            while count < self.recommended_limit:
+                result = self.api.illust_recommended(offset=offset)
+                illusts = result.get('illusts', [])
+                if not illusts:
                     break
-                if self._should_download(illust):
-                    if self.download_illust(illust):
-                        count += 1
-                        if progress_callback:
-                            progress_callback(count, self.recommended_limit)
-                        time.sleep(self.delay)
+                for illust in illusts:
+                    if count >= self.recommended_limit:
+                        break
+                    if self._should_download(illust):
+                        if self.download_illust(illust):
+                            count += 1
+                            if progress_callback:
+                                progress_callback(count, self.recommended_limit)
+                            time.sleep(self.delay)
+                offset += len(illusts)
             self.log(f"推荐作品下载完成: {count}/{self.recommended_limit}")
         except Exception as e:
             self.log(f"获取推荐作品失败: {e}")
