@@ -5,6 +5,13 @@
 Pixiv自动下载器
 自动下载推荐作品和已关注画师的最近作品
 """
+import sys
+import os
+if sys.platform.startswith("win"):
+    import ctypes
+    myappid = 'pixiv.downloader.gui' 
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
 
 import sys
 import os
@@ -12,11 +19,13 @@ from pathlib import Path
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QGridLayout, QLabel, QLineEdit, 
                              QPushButton, QTextEdit, QProgressBar, QSpinBox,
-                             QComboBox, QFileDialog, QGroupBox, QMessageBox)
+                             QComboBox, QFileDialog, QGroupBox, QMessageBox, QCheckBox)
 from PyQt6.QtCore import QThread, pyqtSignal, Qt, QSettings
 from PyQt6.QtGui import QFont, QTextCursor, QIcon
 from token_helper import verify_token
 from pixiv_downloader import PixivDownloader
+
+
 
 class DownloadThread(QThread):
     progress_updated = pyqtSignal(int, int)
@@ -186,6 +195,12 @@ class PixivDownloaderGUI(QMainWindow):
         self.delay.valueChanged.connect(self.save_settings)
         settings_layout.addWidget(self.delay, 6, 1)
         
+        # 多页仅下载单页
+        self.single_page_only = QCheckBox("多页仅下载单页")
+        self.single_page_only.setToolTip("勾选后，多页作品只下载第一页；不勾选则下载所有页面")
+        self.single_page_only.toggled.connect(self.save_settings)
+        settings_layout.addWidget(self.single_page_only, 7, 0, 1, 2)
+        
         layout.addWidget(settings_group)
         
         # 下载按钮组
@@ -237,6 +252,7 @@ class PixivDownloaderGUI(QMainWindow):
         self.settings.setValue("min_likes", self.min_likes.value())
         self.settings.setValue("image_quality", self.image_quality.currentText())
         self.settings.setValue("delay", self.delay.value())
+        self.settings.setValue("single_page_only", self.single_page_only.isChecked())
         self.settings.sync()  # 强制同步到磁盘
     
     def load_settings(self):
@@ -248,6 +264,7 @@ class PixivDownloaderGUI(QMainWindow):
         min_likes = int(self.settings.value("min_likes", 50))
         image_quality = self.settings.value("image_quality", "original")
         delay = int(self.settings.value("delay", 1000))
+        single_page_only = self.settings.value("single_page_only", False, type=bool)
         
         self.token_input.setText(token)
         self.download_path_input.setText(download_path)
@@ -257,6 +274,7 @@ class PixivDownloaderGUI(QMainWindow):
         self.min_likes.setValue(min_likes)
         self.image_quality.setCurrentText(image_quality)
         self.delay.setValue(delay)
+        self.single_page_only.setChecked(single_page_only)
     
     def log(self, message):
         self.log_output.append(f"[{QApplication.instance().applicationName()}] {message}")
@@ -328,6 +346,7 @@ class PixivDownloaderGUI(QMainWindow):
             recommended_limit=self.recommended_limit.value(),
             following_limit=self.following_limit.value(),
             delay=self.delay.value() / 1000.0,  # 将毫秒转换为秒
+            single_page_only=self.single_page_only.isChecked(),  # 添加多页仅下载单页设置
             log_func=self.log
         )
         
@@ -361,6 +380,7 @@ class PixivDownloaderGUI(QMainWindow):
         self.log("下载完成！")
 
 def main():
+    
     app = QApplication(sys.argv)
     app.setApplicationName("Pixiv下载器")
     
