@@ -1,11 +1,5 @@
 @echo off
 chcp 65001 >nul
-title QuickPixiv 启动器
-
-echo ========================================
-echo        QuickPixiv 启动器
-echo ========================================
-echo.
 
 :: 检查虚拟环境
 if not exist "pixiv_env\Scripts\activate.bat" (

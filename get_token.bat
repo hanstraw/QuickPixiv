@@ -2,11 +2,6 @@
 chcp 65001 >nul
 title QuickPixiv Token获取工具
 
-echo ========================================
-echo        QuickPixiv Token获取工具
-echo ========================================
-echo.
-
 :: 检查虚拟环境
 if not exist "pixiv_env\Scripts\activate.bat" (
     echo 错误：找不到虚拟环境！
